@@ -13,31 +13,51 @@ using namespace fmi4cpp::fmi2;
 
 fmu::fmu(const std::filesystem::path& fmuPath)
 {
+    load_model(fmuPath);
+}
 
+void fmu::load_model(const std::filesystem::path& fmuPath)
+{
     if (!exists(fmuPath)) {
         const auto err = "No such file '" + absolute(fmuPath).string() + "'!";
         MLOG_FATAL(err);
         throw std::runtime_error(err);
     }
 
+    MLOG_DEBUG("Loading FMU: " << fmuPath);
+
     const std::string fmuName = fmuPath.stem().string();
-    std::filesystem::path tmpPath(std::filesystem::temp_directory_path() /= std::filesystem::path("fmi4cpp_" + fmuName + "_" + generate_simple_id(8)));
 
-    if (!create_directories(tmpPath)) {
-        const auto err = "Failed to create temporary directory '" + tmpPath.string() + "' !";
-        MLOG_FATAL(err);
-        throw std::runtime_error(err);
+    std::filesystem::path targetPath;
+    bool preExtractionFlag;
+    if (std::filesystem::is_directory(fmuPath)) {
+        MLOG_DEBUG("Attempting to load as pre-extracted fmu");
+        preExtractionFlag = true;
+        targetPath = fmuPath;
+    } else {
+        MLOG_DEBUG("Attempting to load as compressed fmu");
+        preExtractionFlag = false;
+
+        std::filesystem::path tmpPath(std::filesystem::temp_directory_path() /= std::filesystem::path("fmi4cpp_" + fmuName + "_" + generate_simple_id(8)));
+        targetPath = tmpPath;
+
+        if (!create_directories(tmpPath)) {
+            const auto err = "Failed to create temporary directory '" + tmpPath.string() + "' !";
+            MLOG_FATAL(err);
+            throw std::runtime_error(err);
+        }
+
+        MLOG_DEBUG("Created temporary directory '" << tmpPath.string());
+
+        if (!unzip(fmuPath, tmpPath.string())) {
+            const auto err = "Failed to extract FMU '" + absolute(fmuPath).string() + "'!";
+            MLOG_FATAL(err);
+            throw std::runtime_error(err);
+        }
     }
 
-    MLOG_DEBUG("Created temporary directory '" << tmpPath.string());
-
-    if (!unzip(fmuPath, tmpPath.string())) {
-        const auto err = "Failed to extract FMU '" + absolute(fmuPath).string() + "'!";
-        MLOG_FATAL(err);
-        throw std::runtime_error(err);
-    }
-
-    resource_ = std::make_shared<fmu_resource>(tmpPath);
+    resource_ = std::make_shared<fmu_resource>(targetPath);
+    resource_->set_pre_extracted(preExtractionFlag);
     modelDescription_ = std::move(parse_model_description(resource_->model_description_path()));
 }
 

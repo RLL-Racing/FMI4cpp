@@ -27,6 +27,8 @@ private:
 public:
     explicit fmu(const std::filesystem::path& fmuPath);
 
+    void load_model(const std::filesystem::path& fmuPath);
+
     [[nodiscard]] std::string get_model_description_xml() const;
     [[nodiscard]] std::shared_ptr<const model_description> get_model_description() const override;
 
