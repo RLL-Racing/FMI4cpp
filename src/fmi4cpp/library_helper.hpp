@@ -10,7 +10,8 @@ namespace fmi4cpp
 inline DLL_HANDLE load_library(const std::string& libName)
 {
 #ifdef WIN32
-    return LoadLibrary(libName.c_str());
+    std::wstring libNameTemp = std::wstring(libName.begin(), libName.end());
+    return LoadLibrary(libNameTemp.c_str());
 #else
     return dlopen(libName.c_str(), RTLD_NOW | RTLD_LOCAL);
 #endif
