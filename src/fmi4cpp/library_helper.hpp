@@ -40,7 +40,19 @@ inline std::string getLastError()
 {
 #ifdef WIN32
     std::ostringstream os;
-    os << GetLastError();
+
+    DWORD errorMessageID = ::GetLastError();
+    if (errorMessageID == 0) {
+        return "";
+    }
+
+    LPWSTR messageBuffer = nullptr;
+    size_t size = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+        nullptr, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPWSTR)&messageBuffer, 0, nullptr);
+
+    os << errorMessageID << " " << messageBuffer;
+    LocalFree(messageBuffer);
+
     return os.str();
 #else
     return dlerror();
