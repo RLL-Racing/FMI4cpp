@@ -2,6 +2,7 @@
 #define FMI4CPP_LIBRARYHELPER_HPP
 
 #include <fmi4cpp/dll_handle.hpp>
+
 #include <sstream>
 
 namespace fmi4cpp
@@ -10,8 +11,8 @@ namespace fmi4cpp
 inline DLL_HANDLE load_library(const std::string& libName)
 {
 #ifdef WIN32
-    std::wstring libNameTemp = std::wstring(libName.begin(), libName.end());
-    return LoadLibrary(libNameTemp.c_str());
+    std::wstring wLibName = std::wstring(libName.begin(), libName.end());
+    return LoadLibrary(wLibName.c_str());
 #else
     return dlopen(libName.c_str(), RTLD_NOW | RTLD_LOCAL);
 #endif
@@ -59,6 +60,6 @@ inline std::string getLastError()
 #endif
 }
 
-} // namespace
+} // namespace fmi4cpp
 
-#endif //FMI4CPP_LIBRARYHELPER_HPP
+#endif // FMI4CPP_LIBRARYHELPER_HPP
