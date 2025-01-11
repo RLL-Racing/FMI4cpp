@@ -58,8 +58,6 @@ fmi2_library::fmi2_library(const std::string& modelIdentifier, const std::shared
 {
     const std::string libName = resource->absolute_library_path(modelIdentifier);
 
-    MLOG_DEBUG("Loading shared library '" + std::filesystem::path(libName).stem().string() + get_shared_library_extension() + "'");
-
 #ifdef _WIN32
     std::string dllDirectory;
     std::filesystem::path path(libName);
@@ -69,19 +67,25 @@ fmi2_library::fmi2_library(const std::string& modelIdentifier, const std::shared
     }
 
     if (!dllDirectory.empty()) {
+        MLOG_DEBUG("Adding shared library directory to dll list '" + dllDirectory + "'.");
         std::wstring wDllDirectory(dllDirectory.begin(), dllDirectory.end());
         SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
         dllDirectoryCookie_ = AddDllDirectory(wDllDirectory.c_str());
     }
 #endif
 
+    MLOG_DEBUG("Loading shared library '" + std::filesystem::path(libName).stem().string() + get_shared_library_extension() + "'.");
+
     handle_ = load_library(libName);
 
     if (!handle_) {
-        const auto err = "Unable to load dynamic library '" + libName + "'! " + getLastError();
+        const auto err = "Unable to load dynamic library '" + libName + "' with error: " + getLastError() + "!";
         MLOG_ERROR(err);
         throw std::runtime_error(err);
     }
+
+    MLOG_DEBUG("Shared library loaded successfully.");
+    MLOG_DEBUG("Loading FMU functions.");
 
     fmi2GetVersion_ = load_function<fmi2GetVersionTYPE*>(handle_, "fmi2GetVersion");
     fmi2GetTypesPlatform_ = load_function<fmi2GetTypesPlatformTYPE*>(handle_, "fmi2GetTypesPlatform");
@@ -118,6 +122,8 @@ fmi2_library::fmi2_library(const std::string& modelIdentifier, const std::shared
         "fmi2GetDirectionalDerivative");
 
     fmi2FreeInstance_ = load_function<fmi2FreeInstanceTYPE*>(handle_, "fmi2FreeInstance");
+
+    MLOG_DEBUG("FMU functions loaded successfully.");
 }
 
 bool fmi2_library::update_status_and_return_true_if_ok(fmi2Status status)

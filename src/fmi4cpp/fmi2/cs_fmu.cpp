@@ -1,5 +1,6 @@
 
 #include <fmi4cpp/fmi2/cs_fmu.hpp>
+#include <fmi4cpp/mlog.hpp>
 
 #include <utility>
 
@@ -24,6 +25,8 @@ std::shared_ptr<const cs_model_description> cs_fmu::get_model_description() cons
 
 std::unique_ptr<cs_slave> cs_fmu::new_instance(const bool visible, const bool loggingOn)
 {
+    MLOG_DEBUG("Creating new cs FMU instance.");
+
     std::shared_ptr<cs_library> lib = nullptr;
     auto modelIdentifier = modelDescription_->model_identifier;
     if (lib_ == nullptr) {

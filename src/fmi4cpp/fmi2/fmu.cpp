@@ -23,35 +23,35 @@ fmu::fmu(const std::filesystem::path& fmuPath)
 void fmu::load_model(const std::filesystem::path& fmuPath)
 {
     if (!exists(fmuPath)) {
-        const auto err = "No such file '" + absolute(fmuPath).string() + "'!";
+        const auto err = "Cannot load FMU as path does not exist: '" + absolute(fmuPath).string() + "'!";
         MLOG_FATAL(err);
         throw std::runtime_error(err);
     }
 
-    MLOG_DEBUG("Loading FMU: " << fmuPath);
+    MLOG_DEBUG("Loading FMU: '" + fmuPath.string() + "'.");
 
     const std::string fmuName = fmuPath.stem().string();
 
     std::filesystem::path targetPath;
     bool preExtractionFlag;
     if (std::filesystem::is_directory(fmuPath)) {
-        MLOG_DEBUG("Attempting to load as pre-extracted fmu");
+        MLOG_DEBUG("Attempting to load as pre-extracted fmu.");
         preExtractionFlag = true;
         targetPath = fmuPath;
     } else {
-        MLOG_DEBUG("Attempting to load as compressed fmu");
+        MLOG_DEBUG("Attempting to load as compressed fmu.");
         preExtractionFlag = false;
 
         std::filesystem::path tmpPath(std::filesystem::temp_directory_path() /= std::filesystem::path("fmi4cpp_" + fmuName + "_" + generate_simple_id(8)));
         targetPath = tmpPath;
 
         if (!create_directories(tmpPath)) {
-            const auto err = "Failed to create temporary directory '" + tmpPath.string() + "' !";
+            const auto err = "Failed to create temporary directory '" + tmpPath.string() + "'!";
             MLOG_FATAL(err);
             throw std::runtime_error(err);
         }
 
-        MLOG_DEBUG("Created temporary directory '" << tmpPath.string());
+        MLOG_DEBUG("Created temporary directory '" << tmpPath.string() + "'.");
 
         if (!unzip(fmuPath, tmpPath.string())) {
             const auto err = "Failed to extract FMU '" + absolute(fmuPath).string() + "'!";
@@ -63,6 +63,8 @@ void fmu::load_model(const std::filesystem::path& fmuPath)
     resource_ = std::make_shared<fmu_resource>(targetPath);
     resource_->set_pre_extracted(preExtractionFlag);
     modelDescription_ = std::move(parse_model_description(resource_->model_description_path()));
+
+    MLOG_DEBUG("FMU loaded successfully.");
 }
 
 std::string fmu::get_model_description_xml() const
