@@ -11,6 +11,10 @@
 using namespace fmi4cpp;
 using namespace fmi4cpp::fmi2;
 
+fmu::fmu()
+{
+}
+
 fmu::fmu(const std::filesystem::path& fmuPath)
 {
     load_model(fmuPath);

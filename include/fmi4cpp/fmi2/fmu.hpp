@@ -25,6 +25,7 @@ private:
     std::shared_ptr<const model_description> modelDescription_;
 
 public:
+    explicit fmu();
     explicit fmu(const std::filesystem::path& fmuPath);
 
     void load_model(const std::filesystem::path& fmuPath);
