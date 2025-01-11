@@ -5,6 +5,7 @@
 #include <chrono>
 #include <ctime>
 #include <iostream>
+#include <sstream>
 #include <string>
 
 namespace
@@ -58,12 +59,23 @@ mlog_level M_LOG_LEVEL = Info;
 #    define MLOG_ERROR(msg) _MLOG_(msg, Error)
 #    define MLOG_FATAL(msg) _MLOG_(msg, Fatal)
 
-#    define _MLOG_(msg, level)                                                                                                                    \
-        {                                                                                                                                         \
-            if (level >= M_LOG_LEVEL) {                                                                                                           \
-                auto time_now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());                                           \
-                __MLOG__("[" << to_string(level) << "] [" << std::ctime(&time_now) << "] " << __FILE__ << ":" << __LINE__ << ": " << msg, level); \
-            }                                                                                                                                     \
+#    ifdef _WIN32
+#        define _MGET_LOCAL_TIME_(utc_tm, now_c) localtime_s(utc_tm, now_c);
+#    else
+#        define _MGET_LOCAL_TIME_(utc_tm, now_c) localtime_r(now_c, utc_tm);
+#    endif
+
+#    define _MLOG_(msg, level)                                                                                                        \
+        {                                                                                                                             \
+            if (level >= M_LOG_LEVEL) {                                                                                               \
+                auto now = std::chrono::system_clock::now();                                                                          \
+                auto now_c = std::chrono::system_clock::to_time_t(now);                                                               \
+                std::tm utc_tm;                                                                                                       \
+                _MGET_LOCAL_TIME_(&utc_tm, &now_c)                                                                                    \
+                std::ostringstream oss;                                                                                               \
+                oss << std::put_time(&utc_tm, "%Y-%m-%d %H:%M:%S");                                                                   \
+                __MLOG__("[" << to_string(level) << "] [" << oss.str() << "] " << __FILE__ << ":" << __LINE__ << ": " << msg, level); \
+            }                                                                                                                         \
         }
 
 #    define __MLOG__(msg, level)               \

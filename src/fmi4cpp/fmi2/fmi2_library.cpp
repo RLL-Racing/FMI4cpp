@@ -40,7 +40,7 @@ void logger(void* /*fmi2ComponentEnvironment*/, fmi2String instance_name, fmi2St
     va_list argp;
 
     va_start(argp, message);
-    vsprintf(msg, message, argp);
+    vsprintf_s(msg, message, argp);
     va_end(argp);
 
     MLOG_INFO("[FMI callback logger] status=" + to_string(status) + ", instanceName=" + instance_name +
