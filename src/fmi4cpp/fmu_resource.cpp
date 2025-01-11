@@ -36,6 +36,10 @@ std::string fmu_resource::get_model_description_xml() const
 
 fmu_resource::~fmu_resource()
 {
+    if (pre_extracted_) {
+        return;
+    }
+
     std::error_code success;
     remove_all(path_, success);
 
@@ -44,4 +48,9 @@ fmu_resource::~fmu_resource()
     } else {
         MLOG_DEBUG("Unable to delete temporal folder '" + path_.string() + "'");
     }
+}
+
+void fmi4cpp::fmu_resource::set_pre_extracted(const bool flag)
+{
+    pre_extracted_ = flag;
 }

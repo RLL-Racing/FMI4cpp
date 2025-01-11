@@ -13,6 +13,7 @@ class fmu_resource
 
 private:
     std::filesystem::path path_;
+    bool pre_extracted_ = false;
 
 public:
     explicit fmu_resource(std::filesystem::path path);
@@ -26,6 +27,8 @@ public:
     [[nodiscard]] std::string get_model_description_xml() const;
 
     ~fmu_resource();
+
+    void set_pre_extracted(const bool flag);
 };
 
 } // namespace fmi4cpp
