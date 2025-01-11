@@ -70,6 +70,7 @@ fmi2_library::fmi2_library(const std::string& modelIdentifier, const std::shared
 
     if (!dllDirectory.empty()) {
         std::wstring wDllDirectory(dllDirectory.begin(), dllDirectory.end());
+        SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
         dllDirectoryCookie_ = AddDllDirectory(wDllDirectory.c_str());
     }
 #endif
