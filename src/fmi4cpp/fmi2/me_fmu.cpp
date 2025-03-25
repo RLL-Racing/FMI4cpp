@@ -1,7 +1,7 @@
 
 #include <fmi4cpp/fmi2/me_fmu.hpp>
 #include <fmi4cpp/fmi2/me_instance.hpp>
-#include <fmi4cpp/mlog.hpp>
+#include <Utilities/Messenger.hpp>
 
 #include <utility>
 
@@ -26,7 +26,7 @@ std::shared_ptr<const me_model_description> me_fmu::get_model_description() cons
 
 std::unique_ptr<me_instance> me_fmu::new_instance(const bool visible, const bool loggingOn)
 {
-    MLOG_DEBUG("Creating new me FMU instance.");
+    LOG_CORE_DEBUG("Creating new me FMU instance.");
 
     std::shared_ptr<me_library> lib = nullptr;
     auto modelIdentifier = modelDescription_->model_identifier;

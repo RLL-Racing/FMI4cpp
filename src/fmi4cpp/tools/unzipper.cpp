@@ -1,7 +1,7 @@
 
 #include "fmi4cpp/tools/unzipper.hpp"
 
-#include "fmi4cpp/mlog.hpp"
+#include <Utilities/Messenger.hpp>
 
 #include <fstream>
 #include <string>
@@ -11,7 +11,7 @@ bool fmi4cpp::unzip(const std::filesystem::path& zip_file, const std::filesystem
 {
     // Check if the zip file exists
     if (!exists(zip_file)) {
-        MLOG_ERROR("Error: Zip file does not exist: " + std::filesystem::absolute(zip_file).string());
+        LOG_CORE_ERROR("Zip file does not exist: {0}", std::filesystem::absolute(zip_file).string().c_str());
         return false;
     }
 
@@ -27,7 +27,7 @@ bool fmi4cpp::unzip(const std::filesystem::path& zip_file, const std::filesystem
     const int result = std::system(command.c_str());
 
     if (result != 0) {
-        MLOG_ERROR("Error: Unzipping failed with code " + result);
+        LOG_CORE_ERROR("Unzipping failed with code: {0}", result);
         return false;
     }
 

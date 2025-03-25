@@ -1,7 +1,7 @@
 
 #include <fmi4cpp/fmi2/fmi2_library.hpp>
 #include <fmi4cpp/library_helper.hpp>
-#include <fmi4cpp/mlog.hpp>
+#include <Utilities/Messenger.hpp>
 #include <fmi4cpp/tools/os_util.hpp>
 
 #include <cstdarg>
@@ -43,8 +43,7 @@ void logger(void* /*fmi2ComponentEnvironment*/, fmi2String instance_name, fmi2St
     vsprintf_s(msg, message, argp);
     va_end(argp);
 
-    MLOG_INFO("[FMI callback logger] status=" + to_string(status) + ", instanceName=" + instance_name +
-        ", category=" + category + ", message=" + msg);
+    LOG_CORE_INFO("[FMI callback logger] status = {0}, instanceName = {1}, category = {2}, message = {3}", to_string(status).c_str(), instance_name, category, msg);
 }
 
 const fmi2CallbackFunctions callback = {
@@ -67,25 +66,25 @@ fmi2_library::fmi2_library(const std::string& modelIdentifier, const std::shared
     }
 
     if (!dllDirectory.empty()) {
-        MLOG_DEBUG("Adding shared library directory to dll list '" + dllDirectory + "'.");
+        LOG_CORE_DEBUG("Adding shared library directory to dll list: ", dllDirectory.c_str());
         std::wstring wDllDirectory(dllDirectory.begin(), dllDirectory.end());
         SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
         dllDirectoryCookie_ = AddDllDirectory(wDllDirectory.c_str());
     }
 #endif
 
-    MLOG_DEBUG("Loading shared library '" + std::filesystem::path(libName).stem().string() + get_shared_library_extension() + "'.");
+    LOG_CORE_DEBUG("Loading shared library: ", (std::filesystem::path(libName).stem().string() + get_shared_library_extension()).c_str());
 
     handle_ = load_library(libName);
 
     if (!handle_) {
         const auto err = "Unable to load dynamic library '" + libName + "' with error: " + getLastError() + "!";
-        MLOG_ERROR(err);
+        LOG_CORE_ERROR(err);
         throw std::runtime_error(err);
     }
 
-    MLOG_DEBUG("Shared library loaded successfully.");
-    MLOG_DEBUG("Loading FMU functions.");
+    LOG_CORE_DEBUG("Shared library loaded successfully.");
+    LOG_CORE_DEBUG("Loading FMU functions.");
 
     fmi2GetVersion_ = load_function<fmi2GetVersionTYPE*>(handle_, "fmi2GetVersion");
     fmi2GetTypesPlatform_ = load_function<fmi2GetTypesPlatformTYPE*>(handle_, "fmi2GetTypesPlatform");
@@ -123,7 +122,7 @@ fmi2_library::fmi2_library(const std::string& modelIdentifier, const std::shared
 
     fmi2FreeInstance_ = load_function<fmi2FreeInstanceTYPE*>(handle_, "fmi2FreeInstance");
 
-    MLOG_DEBUG("FMU functions loaded successfully.");
+    LOG_CORE_DEBUG("FMU functions loaded successfully.");
 }
 
 bool fmi2_library::update_status_and_return_true_if_ok(fmi2Status status)
@@ -161,7 +160,7 @@ fmi2Component fmi2_library::instantiate(const std::string& instanceName, const f
 
     if (c == nullptr) {
         const std::string msg = "Fatal: fmi2Instantiate returned nullptr, unable to instantiate FMU instance!";
-        MLOG_ERROR(msg);
+        LOG_CORE_ERROR(msg);
         throw std::runtime_error(msg);
     }
 
@@ -179,11 +178,13 @@ bool fmi2_library::setup_experiment(fmi2Component c, double tolerance, double st
 {
     bool stopDefined = (stopTime > startTime);
     bool toleranceDefined = (tolerance > 0);
-    MLOG_INFO("Calling fmi2SetupExperiment with toleranceDefined=" +
-            std::string((toleranceDefined ? "true" : "false"))
-        << ", tolerance=" << tolerance
-        << ", startTime=" << startTime
-        << ", stopTimeDefined=" << std::string((stopDefined ? "true" : "false")) << ", stop=" << stopTime)
+    LOG_CORE_INFO("Calling fmi2SetupExperiment with toleranceDefined = {0}, tolerance = {1}, startTime = {2}, stopTimeDefined = {3}, stop = {4}",
+        std::string(toleranceDefined ? "true" : "false").c_str(),
+        tolerance,
+        startTime,
+        std::string(stopDefined ? "true" : "false").c_str(),
+        stopTime
+    );
     return update_status_and_return_true_if_ok(
         fmi2SetupExperiment_(c, toleranceDefined, tolerance, startTime, stopDefined, stopTime));
 }
@@ -449,7 +450,7 @@ fmi2_library::~fmi2_library()
 
     if (handle_) {
         if (!free_library(handle_)) {
-            MLOG_ERROR(getLastError());
+            LOG_CORE_ERROR(getLastError().c_str());
         }
         handle_ = nullptr;
     }

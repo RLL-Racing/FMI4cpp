@@ -1,7 +1,7 @@
 
 #include <fmi4cpp/fmi2/fmu.hpp>
 #include <fmi4cpp/fmi2/xml/model_description_parser.hpp>
-#include <fmi4cpp/mlog.hpp>
+#include <Utilities/Messenger.hpp>
 #include <fmi4cpp/tools/os_util.hpp>
 #include <fmi4cpp/tools/simple_id.hpp>
 #include <fmi4cpp/tools/unzipper.hpp>
@@ -23,39 +23,39 @@ fmu::fmu(const std::filesystem::path& fmuPath)
 void fmu::load_model(const std::filesystem::path& fmuPath)
 {
     if (!exists(fmuPath)) {
-        const auto err = "Cannot load FMU as path does not exist: '" + absolute(fmuPath).string() + "'!";
-        MLOG_FATAL(err);
+        const auto err = "Cannot load FMU as path does not exist: " + absolute(fmuPath).string();
+        LOG_CORE_CRITICAL(err);
         throw std::runtime_error(err);
     }
 
-    MLOG_DEBUG("Loading FMU: '" + fmuPath.string() + "'.");
+    LOG_CORE_DEBUG("Loading FMU: {0}", fmuPath.string().c_str());
 
     const std::string fmuName = fmuPath.stem().string();
 
     std::filesystem::path targetPath;
     bool preExtractionFlag;
     if (std::filesystem::is_directory(fmuPath)) {
-        MLOG_DEBUG("Attempting to load as pre-extracted fmu.");
+        LOG_CORE_DEBUG("Attempting to load as pre-extracted fmu.");
         preExtractionFlag = true;
         targetPath = fmuPath;
     } else {
-        MLOG_DEBUG("Attempting to load as compressed fmu.");
+        LOG_CORE_DEBUG("Attempting to load as compressed fmu.");
         preExtractionFlag = false;
 
         std::filesystem::path tmpPath(std::filesystem::temp_directory_path() /= std::filesystem::path("fmi4cpp_" + fmuName + "_" + generate_simple_id(8)));
         targetPath = tmpPath;
 
         if (!create_directories(tmpPath)) {
-            const auto err = "Failed to create temporary directory '" + tmpPath.string() + "'!";
-            MLOG_FATAL(err);
+            const auto err = "Failed to create temporary directory: " + tmpPath.string();
+            LOG_CORE_CRITICAL(err);
             throw std::runtime_error(err);
         }
 
-        MLOG_DEBUG("Created temporary directory '" << tmpPath.string() + "'.");
+        LOG_CORE_DEBUG("Created temporary directory: {0}", tmpPath.string().c_str());
 
         if (!unzip(fmuPath, tmpPath.string())) {
-            const auto err = "Failed to extract FMU '" + absolute(fmuPath).string() + "'!";
-            MLOG_FATAL(err);
+            const auto err = "Failed to extract FMU: " + absolute(fmuPath).string();
+            LOG_CORE_CRITICAL(err);
             throw std::runtime_error(err);
         }
     }
@@ -64,7 +64,7 @@ void fmu::load_model(const std::filesystem::path& fmuPath)
     resource_->set_pre_extracted(preExtractionFlag);
     modelDescription_ = std::move(parse_model_description(resource_->model_description_path()));
 
-    MLOG_DEBUG("FMU loaded successfully.");
+    LOG_CORE_DEBUG("FMU loaded successfully.");
 }
 
 std::string fmu::get_model_description_xml() const
